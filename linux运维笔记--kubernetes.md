@@ -14,7 +14,7 @@
 
 它是用来让资源合理的分发到各节点上并且监控节点运行情况的，核心算法是不能让节点空闲
 
-### 控制器（controller）
+#### 控制器（controller）
 
 它是用来管理一组pod的，通过和api server交互来管理pod组的状态。在一个集群中可以有多个控制器，k8s提供多种内置的控制器，如Deployments和job等。
 
@@ -311,3 +311,78 @@ k8s网络模型假定所有Pod都在一个可以直接连接的网络内，即�
 
 无视物理ip的原理是用数据包套数据包，即用物理上真实要传输的数据包的数据体内套入容器内要传的数据包，最后在到达目标物理主机时拆开就能得到容器内用的数据包。此过程需要etcd了解物理机ip和容器内设置的ip之间的对应关系。在此过程中使用的是UDP，因为速度快但不稳定（使用UDP的原因是不同节点一般都会在同一个机房内部，传输链路短基本UDP不会丢）
 
+### k8s部署步骤
+
+#### 系统准备
+
+1. 更改主机名
+2. 配置网卡ip地址
+3. 修改hosts地址解析，让每个节点ip对应一个域名
+4. 暂时关闭防火墙，等配置完成再开启
+5. 关闭selinux
+6. 关闭swap分区
+7. 使用stpd同步时间
+8. 升级内核（可选）
+9. 安装ipvsadm和ipset，为了使用高性能的内核转发和网桥过滤（可选）
+
+### docker准备
+
+1. 安装docker-ce和containd.io，不能是docker
+2. 
+
+#### k8s安装
+
+1. 更改yum源为网速快的
+
+   创建并修改/etc/yum.repos.d/k8s.repo内容为
+
+   ```bash
+   [kubernetes]
+   name=Kubernetes
+   baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+   enabled=1
+   gpgcheck=0
+   repo_gpgcheck=0
+   gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+   ```
+
+2. 安装kubeadm kubelet kubectl
+
+3. 修改/etc/sysconfig/kubelet，为了能使用镜像同步
+
+   ```bash
+   KUBELET_EXTRA_ARGS="--cgroup-driver=systemd"
+   ```
+
+4. 创建image_download.sh文件方便下载镜像，在work节点中只用到pause和proxy，master节点才要下这么多
+
+   image_list不一定一样，最好使用kubeadm config images list对照
+
+   ```bash
+   #!/bin/bash
+   images_list='
+   registry.k8s.io/kube-apiserver:v1.25.3
+   registry.k8s.io/kube-controller-manager:v1.25.3
+   registry.k8s.io/kube-scheduler:v1.25.3
+   registry.k8s.io/kube-proxy:v1.25.3
+   registry.k8s.io/pause:3.8
+   registry.k8s.io/etcd:3.5.4-0
+   registry.k8s.io/coredns/coredns:v1.9.3'
+   
+   for i in $images_list
+   do
+   	docker pull $i
+   done
+   
+   docker save -o k8s.tar $images_list
+   ```
+
+5. 初始化集群
+
+   ```bash
+   kubeadm init --kubernetes-version=v1.25.0 --pod-network-cidr=10.224.0.0/16 --apiserver-advertise-address=<本机内网ip> --cri-socket unix:///var/run/cri-dockerd.sock
+   ```
+
+   
+
+6. 

@@ -1,6 +1,6 @@
 ## llinux运维笔记-->防火墙
 
-本次使用的防火墙是centos7的firewalld，centos7以下用的是iptables
+本次使用的防火墙是centos7的firewalld；centos7以下用的是iptables；另一个是ufw是ubuntu等debian家族的防火墙。三种不互斥，所以当开启firewalld时就不要开ufw，反之亦然。
 
 ### 开启服务器并自启动
 
@@ -51,5 +51,19 @@ firewall-cmd --permanent --remove-rich-rule 'rule family=ipv4 source address=10.
 ```bash
 # 任何操作完之后都要重载规则才能生效
 firewall-cmd --reload
+```
+
+### 常见端口开放
+
+```bash
+# 开放k8s的etcd集群所需端口2379（客户端监听）和2380（节点间内部通信）和6443api端口和8443虚拟ip监听的服务端口
+firewall-cmd --permanent --add-port=2379/tcp
+firewall-cmd --permanent --add-port=2380/tcp
+firewall-cmd --permanent --add-port=6443/tcp
+firewall-cmd --permanent --add-port=8443/tcp
+# 开放k8s的flannel网络组件的端口
+firewall-cmd --permanent --add-port=8472/tcp
+# 开放mysql的端口3306
+firewall-cmd --permanent --add-port=3306/tcp
 ```
 
