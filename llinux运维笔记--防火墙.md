@@ -9,6 +9,19 @@ systemctl enable firewalld
 systemctl start firewalld
 ```
 
+### 开启日志
+
+```bash
+# 将LogDenied=all，然后重启服务
+vim /etc/firewalld/firewalld.conf
+# 验证是否改成功，显示all就成功
+firewall-cmd --get-log-denied
+# 查看日志
+dmesg --| grep -i reject
+```
+
+
+
 ### 查询所有配置
 
 ```bash
