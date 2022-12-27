@@ -69,11 +69,13 @@ firewall-cmd --reload
 ### 常见端口开放
 
 ```bash
-# 开放k8s的etcd集群所需端口2379（客户端监听）和2380（节点间内部通信）和6443api端口和8443虚拟ip监听的服务端口
+# 开放k8s的etcd集群所需端口2379（客户端监听）和2380（节点间内部通信）和6443api端口和8443虚拟ip监听的服务端口以及10248的kubelet检查健康服务、10250的kubelet服务
 firewall-cmd --permanent --add-port=2379/tcp
 firewall-cmd --permanent --add-port=2380/tcp
 firewall-cmd --permanent --add-port=6443/tcp
 firewall-cmd --permanent --add-port=8443/tcp
+firewall-cmd --permanent --add-port=10250/tcp
+firewall-cmd --permanent --add-port=10248/tcp
 # 开放k8s的flannel网络组件的端口
 firewall-cmd --permanent --add-port=8472/tcp
 # 开放mysql的端口3306

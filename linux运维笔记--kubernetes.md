@@ -209,7 +209,7 @@ kubectl apply -f <yaml文件>
 
 
 
-#### kuboard网页管理集群插件
+#### 网页管理（kuboard）
 
 kuboard是一个图形化的网页管理集群插件，kuboard官网（kuboard.cn）有安装方式。
 
@@ -242,7 +242,7 @@ spec:
 
 
 
-#### namespace命名空间
+#### 命名空间（namespace）
 
 命名空间为区分业务或各种环境而存在，可以通过kubectl创建命名空间
 
@@ -250,7 +250,7 @@ spec:
 # 查看所有的命名空间
 kubectl get namespace
 # 创建命名空间
-kubuctl create ns <命名空间名称>
+kubectl create ns <命名空间名称>
 ```
 
 也可以用yaml创建
@@ -371,12 +371,19 @@ calico因为其性能、灵活性都好而备受欢迎，calico的功能更加�
 
 1. 安装docker-ce和containd.io，不能是docker
 
-2. git下cri-dockerd编译安装，将源码目录下的systemd的所有文件放到/etc/systemd/system/下
+   ```shell
+   # 设置阿里的docker-ce镜像源
+   yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+   # 然后安装
+   yum install -y docker-ce containd.io
+   ```
 
-3. 修改cri-dockerd.service
+2. git下cri-dockerd编译安装，将源码目录下的systemd的所有文件放到/etc/systemd/system/下。但在这之前需要安装go，按照cir-dockerd的官方文档来做，所有节点都要装
+
+3. 修改cri-dockerd.service，注意看自己的cri-dockerd文件在什么地方
 
    ```bash
-   ExecStart=/usr/bin/cri-dockerd --pod-infra-container-image=registry.k8s.io/pause:3.8 --container-runtime-endpoint fd://
+   ExecStart=/usr/local/bin/cri-dockerd --pod-infra-container-image=registry.k8s.io/pause:3.9 --container-runtime-endpoint fd://
    ```
 
 
@@ -406,17 +413,17 @@ calico因为其性能、灵活性都好而备受欢迎，calico的功能更加�
 
 4. 创建image_download.sh文件方便下载镜像，在work节点中只用到pause和proxy，master节点才要下这么多
 
-   image_list不一定一样，最好使用kubeadm config images list对照
+   image_list不一定一样，最好使用kubeadm config images list --kubernetes-version=<需要的版本>对照
 
    ```bash
    #!/bin/bash
    images_list='
-   registry.k8s.io/kube-apiserver:v1.25.3
-   registry.k8s.io/kube-controller-manager:v1.25.3
-   registry.k8s.io/kube-scheduler:v1.25.3
-   registry.k8s.io/kube-proxy:v1.25.3
-   registry.k8s.io/pause:3.8
-   registry.k8s.io/etcd:3.5.4-0
+   registry.k8s.io/kube-apiserver:v1.26.0
+   registry.k8s.io/kube-controller-manager:v1.26.0
+   registry.k8s.io/kube-scheduler:v1.26.0
+   registry.k8s.io/kube-proxy:v1.26.0
+   registry.k8s.io/pause:3.9
+   registry.k8s.io/etcd:3.5.6-0
    registry.k8s.io/coredns/coredns:v1.9.3'
    
    for i in $images_list
@@ -427,24 +434,26 @@ calico因为其性能、灵活性都好而备受欢迎，calico的功能更加�
    docker save -o k8s.tar $images_list
    ```
 
-5. 初始化集群，记录下添加其他工作节点需要使用的token和discovery-token-ca-cert-hash
+5. 启动服务kubelet以及开放端口
+
+6. 初始化集群，记录下添加其他工作节点需要使用的token和discovery-token-ca-cert-hash
 
    ```bash
    # pod-network-cidr是pod使用的网段，根据需要划分；apiserver-advertise-address一般是主节点的ip
-   kubeadm init --kubernetes-version=v1.25.3 --pod-network-cidr=10.224.0.0/16 --apiserver-advertise-address=10.150.1.15 --cri-socket unix:///var/run/cri-dockerd.sock
+   kubeadm init --kubernetes-version=v1.26.0 --pod-network-cidr=10.224.0.0/16 --apiserver-advertise-address=192.168.1.200 --cri-socket unix:///var/run/cri-dockerd.sock
    # 备注如果要重装集群，先在kubectl删除所有nodes然后用下面的命令
    kubeadm reset --cri-socket unix:///var/run/cri-dockerd.sock
    ```
 
-6. 组装组件
+7. 组装组件
 
    ```bash
    mkdir -p $HOME/.kube
    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
    chown $(id -u):$(id -g) $HOME/.kube/config
    ```
-   
-7. 安装集群网络插件（cni）一般选择calico
+
+8. 安装集群网络插件（cni）一般选择calico
 
    ```bash
    # 下载yaml并直接创建空间
@@ -460,7 +469,7 @@ calico因为其性能、灵活性都好而备受欢迎，calico的功能更加�
    kubectl get pods -n calico-system
    ```
 
-8. 添加工作节点
+9. 添加工作节点
 
    ```bash
    # 查询令牌
@@ -473,21 +482,195 @@ calico因为其性能、灵活性都好而备受欢迎，calico的功能更加�
    kubeadm join 10.150.1.15:6443 --token 9x9m6k.iz5j8imrsntg74e9 --discovery-token-ca-cert-hash sha256:3de6aa8f0cbcb42b0b5675493fb504cd261c713300f563b9c0340554325d2851 --cri-socket unix:///var/run/cri-dockerd.sock
    ```
 
-   9. 验证集群状态
+  10. 验证集群状态
 
       ```bash
       # 必须显示ok
       kubectl get cs
       # 必须全部running
       kubectl get pods -n kube-system
-      # 获取服务必须要有集群ip
+      # 获取服务必须要有集群ip，此时集群还不能对外访问所以externalip为空
       kubectl get svc -n kube-system
-      # 尝试解析外网的域名
+      # 尝试解析外网的域名，如果关闭防火墙解析才能成功，请放行端口后再开启防火墙，端口参考六章节
        dig -t a www.baidu.com @<集群ip>
       # 查看路由表是否有kubernetes的组件
       iptables -nL
       ```
 
-      
+11. 添加ingress-nginx以开放集群对外访问
 
-   
+         ```bash
+         # 下载1.4.0版本ingress-nginx的yaml，如果下载不了就挂梯子，查看里面的镜像拉取要求
+         wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
+         # 从上面的yaml文件中可以知道它要这两个镜像，先pull到docker里，如果是其他版本可能不是这两个
+         docker pull registry.k8s.io/ingress-nginx/controller:v1.4.0
+         docker pull registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20220916-gd32f8c343
+         # 再创建deploy，如果用本地镜像的方式还需要去掉yaml文件内的sha
+         kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
+         # 查看是否都ready
+         kubectl get pods -n ingress-nginx
+         ```
+
+12. 配置ingress-nginx，在clusterIPs下加一行externalIPs填入物理机ip地址
+
+          ```yaml
+          apiVersion: v1
+          kind: Service
+          metadata:
+            creationTimestamp: "2022-10-26T05:09:37Z"
+            labels:
+              app.kubernetes.io/component: controller
+              app.kubernetes.io/instance: ingress-nginx
+              app.kubernetes.io/name: ingress-nginx
+              app.kubernetes.io/part-of: ingress-nginx
+              app.kubernetes.io/version: 1.4.0
+            name: ingress-nginx-controller
+            namespace: ingress-nginx
+            resourceVersion: "707709"
+            uid: d502fe06-d210-461a-92e8-f667eea50136
+          spec:
+            allocateLoadBalancerNodePorts: true
+            clusterIP: 10.98.171.217
+            clusterIPs:
+            - 10.98.171.217
+            externalIPs:
+            - 175.27.159.123
+          ```
+
+13. 验证是否有externalip
+
+          ```bash
+          kubectl get service
+          ```
+
+    
+    ​      
+
+### 六、端口
+
+   |  协议   |   端口号    |                作用                 | 必要性 |
+   | :-----: | :---------: | :---------------------------------: | :----: |
+   |   TCP   |     22      |    ssh远程连接，云服务器默认开启    |   是   |
+   |   TCP   |    2376     | 物理机与Docker守护进程通信的TLS端口 |   否   |
+   |   TCP   |    2379     |           etcd客户端请求            |   是   |
+   |   TCP   |    2380     |            etcd节点通信             |   是   |
+   |   TCP   |    9099     |        Canal/Flannel健康检查        |   否   |
+   |   TCP   |    9796     |   集群监控拉取节点指标的默认端口    |   否   |
+   |   TCP   |    6783     |              Weave端口              |   否   |
+   |   TCP   |    10250    |             kubelet APl             |   是   |
+   |   TCP   |    10254    |     lngress controller健康检查      |   否   |
+   |   TCP   |    6443     |           Kubernetes API            |   是   |
+   | TCP/UDP | 30000-32767 |          NodePort端口范围           |   是   |
+   |   TCP   |    9443     |          Rancher webhooks           |   是   |
+   |   TCP   |     80      |             Rancher节点             |   否   |
+   |   TCP   |     443     |             Rancher节点             |   否   |
+
+### 七、yaml创建微服务示例
+
+创建一个nginx+自己app的pod
+
+
+```yaml
+apiVersion: v1			#必选，版本号，例如v1
+kind: Pod				#必选，Pod
+metadata:				#必选，元数据
+  name: string			  #必选，Pod名称
+  namespace: string		  #必选，Pod所属的命名空间
+  labels:				  #自定义标签
+    - name: string		    #自定义标签名字
+  annotations:			    #自定义注释列表
+    - name: string
+spec:					#必选，Pod中容器的详细定义
+  containers:			  #必选，Pod中容器列表
+  - name: string		    #必选，容器名称
+    image: string		    #必选，容器的镜像名称
+    imagePullPolicy: [Always | Never | IfNotPresent]	#获取镜像的策略：Alawys表示总是下载镜像，IfnotPresent表示优先使用本地镜像，否则下载镜像，Nerver表示仅使用本地镜像
+    command: [string]		#容器的启动命令列表，如不指定，使用打包时使用的启动命令
+    args: [string]			#容器的启动命令参数列表
+    workingDir: string		#容器的工作目录
+    volumeMounts:			#挂载到容器内部的存储卷配置
+    - name: string			  #引用pod定义的共享存储卷的名称，需用volumes[]部分定义的的卷名
+      mountPath: string		  #存储卷在容器内mount的绝对路径，应少于512字符
+      readOnly: boolean		  #是否为只读模式
+    ports:					#需要暴露的端口库号列表
+    - name: string			  #端口号名称
+      containerPort: int	  #容器需要监听的端口号
+      hostPort: int			  #容器所在主机需要监听的端口号，默认与Container相同
+      protocol: string		  #端口协议，支持TCP和UDP，默认TCP
+    env:					#容器运行前需设置的环境变量列表
+    - name: string			  #环境变量名称
+      value: string			  #环境变量的值
+    resources:				#资源限制和请求的设置
+      limits:				  #资源限制的设置
+        cpu: string			    #Cpu的限制，单位为core数，将用于docker run --cpu-shares参数
+        memory: string			#内存限制，单位可以为Mib/Gib，将用于docker run --memory参数
+      requests:				  #资源请求的设置
+        cpu: string			    #Cpu请求，容器启动的初始可用数量
+        memory: string		    #内存清楚，容器启动的初始可用数量
+    livenessProbe:     		#对Pod内个容器健康检查的设置，当探测无响应几次后将自动重启该容器，检查方法有exec、httpGet和tcpSocket，对一个容器只需设置其中一种方法即可
+      exec:					#对Pod容器内检查方式设置为exec方式
+        command: [string]	  #exec方式需要制定的命令或脚本
+      httpGet:				#对Pod内个容器健康检查方法设置为HttpGet，需要制定Path、port
+        path: string
+        port: number
+        host: string
+        scheme: string
+        HttpHeaders:
+        - name: string
+          value: string
+      tcpSocket:			#对Pod内个容器健康检查方式设置为tcpSocket方式
+         port: number
+       initialDelaySeconds: 0	#容器启动完成后首次探测的时间，单位为秒
+       timeoutSeconds: 0		#对容器健康检查探测等待响应的超时时间，单位秒，默认1秒
+       periodSeconds: 0			#对容器监控检查的定期探测时间设置，单位秒，默认10秒一次
+       successThreshold: 0
+       failureThreshold: 0
+       securityContext:
+         privileged:false
+    restartPolicy: [Always | Never | OnFailure]		#Pod的重启策略，Always表示一旦不管以何种方式终止运行，kubelet都将重启，OnFailure表示只有Pod以非0退出码退出才重启，Nerver表示不再重启该Pod
+    nodeSelector: obeject		#设置NodeSelector表示将该Pod调度到包含这个label的node上，以key：value的格式指定
+    imagePullSecrets:			#Pull镜像时使用的secret名称，以key：secretkey格式指定
+    - name: string
+    hostNetwork:false			#是否使用主机网络模式，默认为false，如果设置为true，表示使用宿主机网络
+    volumes:					#在该pod上定义共享存储卷列表
+    - name: string				  #共享存储卷名称 （volumes类型有很多种）
+      emptyDir: {}				  #类型为emtyDir的存储卷，与Pod同生命周期的一个临时目录。为空值
+      hostPath: string			  #类型为hostPath的存储卷，表示挂载Pod所在宿主机的目录
+        path: string			    #Pod所在宿主机的目录，将被用于同期中mount的目录
+      secret:					#类型为secret的存储卷，挂载集群与定义的secre对象到容器内部
+        scretname: string  
+        items:     
+        - key: string
+          path: string
+      configMap:				#类型为configMap的存储卷，挂载预定义的configMap对象到容器内部
+        name: string
+        items:
+        - key: string
+
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mcserver
+  namespace: mc
+  labels:
+    name: mcserver
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+    volumeMounts:
+      - name: vol-nginx-data
+        mountPath: /usr/local/etc/nginx
+  volumes:
+    - name: vol-nginx-data
+      hostPath:
+        path: /usr/nginx-config
+```
+

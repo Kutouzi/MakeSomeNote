@@ -22,6 +22,7 @@
 |             rpm             |           安装rpm包           |                    -i 安装 -e卸载 -qa查询                    |
 |             cp              |           拷贝文件            | -i 覆盖提示 -f覆盖不提示 -b覆盖前备份 -r递归复制 -a原属性复制 |
 |            watch            | 监控变化的输出（比如netstat） |                       -n多少秒进行更新                       |
+|         journalctl          |           系统日志            |     -f 实时滚动 -u搜索service -x额外信息 -e立即跳到末尾      |
 
 #### 特殊用途命令组合
 
@@ -102,6 +103,14 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 reboot
 ```
 
+关于换源
+
+```shell
+# 换成阿里的centos7的yum源
+wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+yum makecache
+```
+
 
 
 ### 配置文件
@@ -120,10 +129,32 @@ reboot
 
 #### 重要的路径
 
-|                   路径                    |            详细说明            |
-| :---------------------------------------: | :----------------------------: |
-|           /etc/nginx/nginx.conf           | nginx的配置文件，安装nginx才有 |
-| /etc/sysconfig/network-scirpts/ifcfg-eth0 | 网卡配置文件，eth0是第一块网卡 |
+|                   路径                    |                           详细说明                           |
+| :---------------------------------------: | :----------------------------------------------------------: |
+|           /etc/nginx/nginx.conf           |                nginx的配置文件，安装nginx才有                |
+| /etc/sysconfig/network-scirpts/ifcfg-eth0 |                网卡配置文件，eth0是第一块网卡                |
+|                /etc/hosts                 |           hosts文件，修改后需要重启network服务生效           |
+|           /etc/systemd/system/*           |                   所有的开机启动服务都在这                   |
+|                /etc/passwd                |                       内有所有用户信息                       |
+|                /etc/group                 |                       内有所有组群信息                       |
+|                  /proc/                   | 目录下的只有数字的文件为进程，这个数字下的目录中文件描述符fd中有0,1,2分别对应输入，输出和报错流 |
+|                                           |                                                              |
+
+```shell
+# 接续/etc/sysconfig/network-scirpts/ifcfg-eth0里的配置
+DEVICE=eth0 #系统中的网卡编号
+HWADDR=00:00:00:00:00:00 #MAC地址
+TYPE=Ethernet #网络类型
+ONBOOT=yes #是否开机即启用
+NM_CONTROLLED=yes
+IPADDR=192.168.1.2 #网络层ip地址
+NETMASK=255.255.255.0 #掩码，与ip的二进制与运算后得网络地址，取反得主机地址
+GATEWAY=192.168.1.1 #默认网关ip地址
+DNS1=8.8.8.8 #主DNS
+DNS2=114.114.114.114 #备用DNS
+```
+
+
 
 ### 重要的包
 
