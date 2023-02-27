@@ -2,6 +2,12 @@
 
 ### awk
 
+awk分为两部分。在开头括号外写匹配什么（多重条件用&&或||等），花括号内写对匹配到的东西干什么
+
+```shell
+awk '匹配什么 && 匹配什么{先干什么}END{最后干什么}' 对谁干
+```
+
 #### 通用匹配
 
 取某行，默认是遇到换行符看做一行
@@ -52,7 +58,7 @@ awk -v FS=: '$3~/(1|2)/' /etc/passwd
 awk -v FS=:  'NR>=3 && NR <=6 && $3~/(1|2)/{print $1}' /etc/passwd
 ```
 
-### 特殊模式
+#### 特殊模式
 
 BEGIN{}会在awk读取内容之前执行，一般计算会在里面做
 
@@ -63,7 +69,7 @@ END{}会在awk读取内容之后执行，一般统计会在里面做
 awk -v FS=:  'NR>=3 && NR <=6 && $3~/(1|2)/{print $1}END{print $1}' /etc/passwd
 ```
 
-### 数组
+#### 数组
 
 ```shell
 #一般的两种数组，数字和字符
@@ -71,9 +77,38 @@ awk 'BEGIN{array[0]=0,array[1]=1;print array[0],array[1]}'
 awk 'BEGIN{array[0]="one",array[1]="two";print array[0],array[1]}'
 #循环取内容
 awk 'BEGIN{array[0]="one",array[1]="two";for(i in array) print array[i]}'
+#统计第二列每一种字符串出现个数，i是字符串，array[i]是出现次数
+awk -v FS=',' '{array[$7]++}END{for(i in array)print i,array[i]}' /etc/passwd
+#上面的结果是如下，如果需要排序就用sort -rnk2
+/bin/sync 1
+/bin/bash 2
+/sbin/nologin 39
+/sbin/halt 1
+/sbin/shutdown 1
 ```
 
+#### 循环
 
+```shell
+awk 'BEGIN{
+	for(i=1;i<=100;i++)
+		sum+=i;
+		print sum
+	}'
+```
+
+#### 判断
+
+一般使用在第二层判断，要判断匹配到的东西里面的东西的时候用
+
+```shell
+awk 'BEGIN{
+	if($2>0)
+		print '+'
+	else
+		print '-'
+	}'
+```
 
 #### 重定向
 
@@ -81,4 +116,12 @@ awk 'BEGIN{array[0]="one",array[1]="two";for(i in array) print array[i]}'
 #重定向到文件pwd.xml里，覆盖重定向>和追加重定向>>都可以用
 awk -v FS=: -v OFS=, '{print $1,$3 > "/home/root/pwd.xml"}' /etc/passwd
 ```
+
+#### 内置函数
+
+| 函数     | 作用       |
+| -------- | ---------- |
+| length() | 统计字符数 |
+|          |            |
+|          |            |
 

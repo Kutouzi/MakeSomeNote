@@ -1,6 +1,6 @@
 ## c++笔记-->后来的特性
 
-其中标记*号为重要特效
+其中标记*号为重要特性
 
 ### c++11
 
@@ -543,6 +543,46 @@ public:
 }
 ```
 
+#### 动态类型转换
+
+```c++
+/**
+ * 常用在需要对类型强转（多态），并且还需要判断是否转换成功的情况
+ * 基类或接口必须是有virtual 
+ */
+class Base{
+public:
+    virtual void sout(){};
+};
+class A : public Base{
+public:
+    int a = 0;
+};
+class B : public Base{
+public:
+    int b = 0;
+};
+
+int main(){
+    Base *base = new A();
+    auto *b = dynamic_cast<B*>(base);
+    if(b){
+        //如果不为空即转换成功，就进入if
+    }
+    //如果为空就什么都不干
+}
+```
+
+```c++
+/*如果不需要判断，就用这个，也可以用c的小括号写法*/
+double *db = new double();
+int it = static_cast<int>(*db);
+```
+
+
+
+
+
 ### c++14
 
 #### *泛型lambda
@@ -669,9 +709,111 @@ int main() {
 }
 ```
 
+#### 可选值(optional)
+
+```c++
+/**
+ * 用于储存可能存在也可能不存在的值，比如配置文件如果存在就读，不存在就用默认值
+ */
+#include <optional>
+
+std::optional<int> readConfig(){
+    //假设这里读取了文件，获得了一个num
+    return num;
+}
+
+int main(){
+    auto num = readConfig();
+    if(num){
+        //如果存在做的事
+    }
+    //如果不存在就不管它
+}
+```
+
+#### 字符串视窗
+
+```c++
+/**
+ * 用于减少字符串操作时多余的内存分配
+ * 另外const char*也是不会分配内存的
+ */
+std::string s = "abcdefghijk";
+std::string_view vs(s.c_str()+1,3); //用vs时无需分配内存，vs是字符串bc
+```
+
+#### *可变类型(variant)
+
+```c++
+/**
+ * 用于存储可能是不同类型的值，比如配置文件读出来可能是int也可能是字符串等类型
+ * 经常和optional搭配使用
+ */
+#include <variant>
+#include <optional>
+
+std::optional<std::variant<std::string,int>> readConfig(){
+    //假设这里读取了一个文件，使得data="a";
+    return data;
+}
+
+int main(){
+    //表示这个类型可能是string也可能是int，但只用一个储存空间，就是最大的那个数据类型的储存空间
+    std::variant<std::string,int> data;
+    readConfig(data);
+    //检查文件是否读取
+    if(data){
+        //检查是否为需要的类型，不检查可能报错
+        auto* value = std::get_if<std::string>(&data);
+        if(value){
+            //如果存在做的事
+        }
+        //如果不存在就不管它
+    }
+}
+```
+
+#### 任意类型(any)
+
+```c++
+/**
+ * 为了类型安全，基本不用
+ * 和variant一样可以存多种数据类型，但是any不需要用<>列出可能的类型，any可以动态分配内存
+ */
+#include <any>
+
+int main(){
+    std::any data;
+    data = "a";
+    try{
+        std::string& s = std::any_cast<std::string>(data);
+    }
+    catch(){
+        
+    }
+}
+```
+
 #### 内联变量
 
 ```c++
+```
+
+#### *结构化绑定
+
+```c++
+/**
+ * 可以有多个函数返回值
+ * 使用对象会有多余的信息，所以用tuple这种结构体来返回
+ * 以前使用结构体会有返回值拆箱的困难，所以有了结构化绑定
+ */
+tuple<int,double> A(){
+    return { 20,5.0 };
+}
+int main(){
+    /*这样写就会创建对应的a，b两个变量，把两个返回值分别写入对应的变量中，简化了拆箱的过程*/
+    auto[a,b] = A();
+}
 ```
 
 
@@ -685,4 +827,4 @@ int main() {
 
 #### 协程
 
-可以挂起和恢复的函数。有了这个函数执行过程可以被打断，就如同断点一样停止在某个地方，等再次被需要时可以接着继续运行。见《协程》
+可以挂起和恢复的函数。有了这个函数执行过程可以被打断，就如同断点一样停止在某个地方，等再次被需要时可以接着继续运行。见《线程和协程》
