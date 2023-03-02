@@ -88,4 +88,34 @@ c++可以使用backtrace函数以及各种框架和库来追溯栈调用，这�
 
 ### noexcept
 
-在名后增加noexcept表示此函数不会抛出异常，以进行编译时优化提高性能。如果错误使用程序会直接崩溃
+noexcept是throw()的改进，在c++20throw()已经被移除（但是throw没有被移除，这是两个东西）
+
+在名后增加noexcept表示此函数不会抛出异常，以进行编译时优化提高性能。如果错误使用程序会调用terminate然后直接崩溃
+
+```c++
+//在c++20的写法，如果抛出异常就不写noexcept
+int func() noexcept{
+    return 0;
+}
+```
+
+noexcept函数可以用来返回一个函数是否会抛出异常
+
+```c++
+class NullPointerException :public Exception{
+    public:
+    void print(){
+        cout<< "空指针异常"<<endl;
+    }
+}
+int func(float *p){
+    if(!p){
+        throw NullPointerException();
+    }
+    return 0;
+}
+int main(){
+    auto except = noexcept(func); //这里会返回false，表示这个函数可能抛出异常
+}
+```
+
