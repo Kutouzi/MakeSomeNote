@@ -150,6 +150,20 @@ int main(){
 
 协程是异步的其中一种实现方式，它在此基础上还增加了中断和恢复，所以被称为协程
 
+创建一个协程函数
+
+```c++
+//返回值必须是Result
+Result MyCoroutine(int value){
+    cout<<value<<endl;
+    //这里进行中断
+    co_await std::suspend_always{};
+    cout<<value +1<<endl;
+}
+```
+
+中断（挂起）协程，协程被中断前会保存函数执行的状态，以便下次恢复协程时继续运行下去。具体实现是调用operator new在堆上开辟了空间来存放状态信息，如果被编译器优化也可能放在栈上
+
 ```c++
 ```
 

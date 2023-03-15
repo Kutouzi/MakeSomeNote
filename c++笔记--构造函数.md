@@ -22,7 +22,7 @@ class MyClass{
 
 当对象创建时，首先会分配空间，接着就是调用构造函数初始化对象
 
-它可以按参数列表进行重载
+它可以按参数列表进行重载。如果重载中没有符合的，决定调用哪个重载函数的行为叫重载决议
 
 ```c++
 class MyClass{
@@ -32,6 +32,14 @@ class MyClass{
     private:
     int myInt =0;
     float myFloat = 0.0f;
+}
+int main(){
+    //调用第一个构造
+    MyClass myClass();
+    //调用第二个构造
+    MyClass my2Class(1,1.0f);
+    //进行重载决议，由编译器决定用哪个
+    MyClass my2Class("sssss");
 }
 ```
 
