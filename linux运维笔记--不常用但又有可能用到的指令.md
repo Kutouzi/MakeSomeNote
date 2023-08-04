@@ -24,6 +24,7 @@
 |             cp              |           拷贝文件            | -i 覆盖提示 -f覆盖不提示 -b覆盖前备份 -r递归复制 -a原属性复制 |
 |            watch            | 监控变化的输出（比如netstat） |                       -n多少秒进行更新                       |
 |         journalctl          |           系统日志            |     -f 实时滚动 -u搜索service -x额外信息 -e立即跳到末尾      |
+|             tar             |       解压缩tar和tar.gz       |                -zxvf解压 -C指定路径 -cvf压缩                 |
 
 #### 特殊用途命令组合
 
@@ -110,6 +111,12 @@ reboot
 # 换成阿里的centos7的yum源
 wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
 yum makecache
+```
+
+关于网络实时检测
+
+```shell
+watch -n 1 "netstat -anp"
 ```
 
 
