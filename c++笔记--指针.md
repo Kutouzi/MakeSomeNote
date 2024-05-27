@@ -182,7 +182,7 @@ int main(){
 template<class T>
 int func(T &&a,T &&b){
     a=a+1;
-    auto %%c = 1; //这个也是万能引用
+    auto &&c = 1; //这个也是万能引用
     return a+b;
 }
 int main(){
