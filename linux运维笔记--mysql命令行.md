@@ -163,6 +163,9 @@ select <别名>.<字段> from <表名> as '<别名>' natural join <表名> as '<
 select <字段> from <表名> inner join <表名> on(<表名>.<字段> = <表名>.<字段>)
 #多表查询，两个以上
 select <字段> from <表名> join <表名> join <表名> join <表名> ...
+
+#子查询
+select <字段> from <表名> where <条件> (select <字段> from <表名> where <条件>)
 ```
 
 内置函数表

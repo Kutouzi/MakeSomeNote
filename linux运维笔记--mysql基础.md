@@ -77,7 +77,11 @@ utf8mb4才是mysql的utf-8字符集
 
   ```sql
   foreign key (<字段名>) references <外表名> (<外表字段名>) <外键策略>
-  # 外键策略可以是on update cascade on delete cascade 更新时同时改变从表
+  # 外键策略可以是
+  #on update cascade 当外表对应项更新时把当前表对应项设为空
+  #on update set null 当外表对应项更新时把当前表对应项设为空
+  #on delete cascade 当外表对应项删除时把当前表对应项删除
+  #on delete set null 当外表对应项删除时把当前表对应项设为空
   ```
 
 #### 约束等级
@@ -103,6 +107,10 @@ alter table <表名> modify <字段名> <数据类型> <新的约束>
 ```
 
 ### 事务
+
+事务为一组sql语句，有原子性（只能全部执行完，否则不执行），分有四种级别见**mysql优化**篇
+
+<font color=red>**不允许在没有开启事务的情况下直接使用增删改的sql语句，因为没有开启事务的操作将不可逆**</font>（只读可以不用）
 
 ```sql
 #开启事务
