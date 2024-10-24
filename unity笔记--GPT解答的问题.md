@@ -1545,3 +1545,64 @@ public class InventoryItem
 
 ### 总结
 通过使用 **UI Toolkit** 的 **UXML** 和 **USS** 文件，我们可以快速创建灵活的 UI 结构。通过结合代码动态加载和添加元素，你可以为玩家物品容器列表这样的场景提供高效的UI解决方案。如果你有进一步的需求或问题，可以随时提问！
+
+
+
+## 可在类内使用record替代内部类
+
+在 C# 中，`record` 类可以声明在另一个类内部，就像内部类（nested class）一样使用。实际上，`record` 和普通的类在这一点上是一样的，都可以作为嵌套类型定义在其他类中。
+
+### 示例：在类中声明 `record`
+
+你可以在一个类内部声明一个 `record`，并像普通的内部类一样使用它。
+
+#### 示例代码：
+
+```csharp
+public class Item
+{
+    public record Dimensions(int Width, int Height, int Depth);
+
+    public Dimensions Dimensions { get; }
+
+    public Item(Dimensions dimensions)
+    {
+        Dimensions = dimensions;
+    }
+
+    public void PrintDimensions()
+    {
+        Console.WriteLine($"Width: {Dimensions.Width}, Height: {Dimensions.Height}, Depth: {Dimensions.Depth}");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // 使用内部的 record 类
+        Item.Dimensions dimensions = new Item.Dimensions(100, 200, 300);
+        Item item = new Item(dimensions);
+
+        item.PrintDimensions();
+    }
+}
+```
+
+### 解释：
+
+1. **内部声明的 `record`**：`Dimensions` 是 `Item` 类的一个内部 `record`，它定义在 `Item` 类内部。
+2. **如何使用**：在外部代码中，你可以通过 `Item.Dimensions` 来访问内部的 `record` 类，就像你访问一个普通的嵌套类一样。
+3. **构造**：通过传递 `Dimensions` 对象给 `Item` 构造函数，你可以在 `Item` 类中操作它。
+
+### 使用场景：
+
+- **封装复杂逻辑**：如果 `record` 是与 `Item` 紧密相关的数据模型，但不希望暴露给外部，它可以作为一个内部嵌套类。
+- **组织代码结构**：将相关的数据结构集中在一个类内，有助于逻辑上的封装和代码的组织性，尤其是在需要管理多个相关的小型数据模型时。
+
+### 注意事项：
+
+- `record` 在作为内部类时和普通的嵌套类一样，没有特殊的限制或功能变化。
+- 你仍然可以给 `record` 类添加方法、属性，甚至实现接口，就像对待普通类一样。
+
+通过这种方式，你可以保持类内部结构的清晰，同时利用 `record` 提供的简洁数据封装特性。
