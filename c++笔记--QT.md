@@ -31,3 +31,22 @@ set(CMAKE_PREFIX_PATH "D:/Environment/Qt/6.5.1/mingw_64/lib/cmake") #这个请�
 qt_standard_project_setup()
 ```
 
+### 打包运行
+
+把项目切换成release并构建，在目录build/release目录下生成appXXXXX.exe文件
+
+新建一个文件夹，将exe文件复制到文件夹内
+
+命令行执行路径Qt\6.x.x\mingw_64\bin目录下对应平台的windeployqt6.exe
+
+```shell
+./windeployqt6.exe appXXXXX.exe
+```
+
+之后所有依赖项dll会被复制到该目录下
+
+然后将Qt\6.x.x\mingw_64\qml内所有文件复制到该目录的\qml下
+
+如果依旧不能打开就复制Qt\6.x.x\mingw_64\bin下所有Qt6开头的dll到该exe同级目录下
+
+将该文件夹压缩即可发布
