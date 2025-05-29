@@ -60,7 +60,7 @@ UI动画会消耗cpu性能，如果需要尽量使用material来创建动画（�
 
 经常会使用UI显示游戏内数据，如果UI引用或者触发事件的方式来获取游戏内数据，会导致UI持有引用游戏内对象
 
-为了解耦应使用viewmodel（需要UMG Viewmodel插件，创建蓝图时选择继承view model），它使用了MVVM模式对游戏对象进行监视，当监视的内容改变时会触发UI更新
+为了解耦应使用viewmodel（需要UMG Viewmodel插件，创建蓝图时选择继承view model），它使用了MVVM模式（见java笔记--架构模式）对游戏对象进行监视，当监视的内容改变时会触发UI更新
 
 ### 无效UI
 
