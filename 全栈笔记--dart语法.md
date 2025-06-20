@@ -120,6 +120,23 @@ Future<void> greet() async {
 }
 ```
 
+### 函数可选参数
+
+定义函数时，使用{}把参数括起来表示可选参数为
+
+```dart
+void AppBar({String? key,num? title}){}
+```
+
+在使用时没有传参顺序要求，但需要指定为哪个参数传值
+
+```dart
+// 指定只传key值
+AppBar(key: "text");
+```
+
+> 这个函数也可以是类的构造函数
+
 ### 类的修饰符
 
 类有以下修饰符
