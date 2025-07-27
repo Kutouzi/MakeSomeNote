@@ -76,6 +76,35 @@ Row(
 )
 ```
 
+#### Container
+
+和`SizedBox`类似，但是可以使用阴影背景色圆角等高级设置
+
+```dart
+Container(
+  height: 200,
+  width: double.infinity, // 宽度撑满，也可以在外面套个Expanded
+  decoration: BoxDecoration(
+    color: Colors.white, // 背景色
+    borderRadius: BorderRadius.circular(16), // 圆角半径
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black26,      // 阴影颜色
+        blurRadius: 8,              // 模糊程度
+        offset: Offset(0, 4),       // 阴影偏移量
+      ),
+    ],
+  ),
+  child: Column(
+    children: [
+      Text('内容'),
+    ],
+  ),
+)
+```
+
+> 一般与Expanded搭配使用，把Expanded套在它外面，以便自适应
+
 #### Text
 
 常用的文字显示组件，
@@ -92,11 +121,42 @@ Container(
       maxLines: 1,                      // 限制最多显示一行
 	),
 )
-    
-
 ```
 
 > 会换行，不换行用`TextSpan`，文字会尽可能连着
+
+使用的样式叫TextStyle，可以设置关于字的各种东西
+
+```dart
+Text(
+  '文本',
+  style: TextStyle(
+    color: Colors.red, // 设置字体颜色
+    fontSize: 16,      // 还可以同时设置字体大小等
+  ),
+)
+```
+
+它可以复用，比如作为成员变量定义
+
+```dart
+const TextStyle myFontStyle = TextStyle(
+  fontWeight: FontWeight.w500,
+  fontSize: 16,
+  color: Colors.black,
+);
+```
+
+它也可以被覆盖其中一个值，使用copyWith
+
+```dart
+Text(
+  '特殊文字',
+  style: myFontStyle.copyWith(
+    color: Colors.red,  // 只覆盖颜色，其他保持不变
+  ),
+)
+```
 
 #### ClipPath
 

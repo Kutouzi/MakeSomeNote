@@ -54,7 +54,7 @@ flutter pub run build_runner build
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 part 'user_notifier_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class UserNotifier extends _$UserNotifier {
   @override
     // 这里返回什么就是设置什么作为要监听的量
